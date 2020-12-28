@@ -46,34 +46,30 @@ func (d *Dumper) Dump(v *types.Value) error {
 
 func (d *Dumper) dumpInt(n uint64) error {
 	var err error
+	var val uint64
+	var shift uint64
 	err = d.w.Write(vm.Inew)
 	if err != nil {
 		return err
 	}
-	shift := 0
-	for n != 0 {
-		if n%2 == 1 {
-			err = d.w.Write(vm.Inew)
+	shift = 0x8000000000000000
+	val = 0
+	for n != val {
+		if val != 0 {
+			err = d.w.Write(vm.Ishl)
 			if err != nil {
 				return err
 			}
+			val = val << 1
+		}
+		if (n/shift)%2 != 0 {
 			err = d.w.Write(vm.Iinc)
 			if err != nil {
 				return err
 			}
-			for i := 0; i < shift; i++ {
-				err = d.w.Write(vm.Ishl)
-				if err != nil {
-					return err
-				}
-			}
-			err = d.w.Write(vm.Iadd)
-			if err != nil {
-				return err
-			}
+			val++
 		}
-		n = n >> 1
-		shift++
+		shift = shift / 2
 	}
 	return nil
 }
